@@ -2,13 +2,13 @@ package com.huginnmuninnresearch.chess.state
 
 import com.huginnmuninnresearch.chess.pieces.Piece
 
-class Square(val row: Int, val col: Int, private var contents: Option[(Piece, ChessParameters.Value)]) {
-  def this(row: Int, col: Int) = this(row, col, ChessParameters.Empty, None)
+class Square(val row: Int, val col: Int, private var contents: Option[Piece]) {
+  def this(row: Int, col: Int) = this(row, col, Chess.Empty, None)
 
-  def colour: ChessParameters.Value = {
+  def colour: Chess.Value = {
     (row + col) % 2 match {
-      case 0 => ChessParameters.White
-      case _ => ChessParameters.Black
+      case 0 => Chess.White
+      case _ => Chess.Black
     }
   }
 
@@ -16,36 +16,30 @@ class Square(val row: Int, val col: Int, private var contents: Option[(Piece, Ch
     contents = None
   }
 
-  def fill(piece: Piece, owner: ChessParameters.Value): Unit = {
-    contents = Some(piece, owner)
+  def fill(piece: Piece): Unit = {
+    contents = Some(piece)
   }
 
   override def toString: String = {
-    def pieceCase(side: Option[ChessParameters.Value], x: String): String = {
-      side.get match {
-        case ChessParameters.White => x
-        case _ => x.toLowerCase
+    def pieceCase(piece: Piece): String = {
+      piece.owner match {
+        case Chess.White => piece.toString.toUpperCase
+        case _ => piece.toString.toLowerCase
       }
     }
     def squareCase(row: Int, col: Int): String = {
       colour match {
-        case ChessParameters.White => " "
+        case Chess.White => " "
         case _ => "."
       }
     }
     contents.getOrElse(None) match {
       case None => squareCase(row, col)
-      case contents.get._1 => pieceCase(contents.get._2, ChessParameters.PieceNotation.Pawn.toString)
-      case ChessParameters.King => pieceCase(side, ChessParameters.PieceNotation.King.toString)
-      case ChessParameters.Queen => pieceCase(side, ChessParameters.PieceNotation.Queen.toString)
-      case ChessParameters.Rook => pieceCase(side, ChessParameters.PieceNotation.Rook.toString)
-      case ChessParameters.Bishop => pieceCase(side, ChessParameters.PieceNotation.Bishop.toString)
-      case ChessParameters.Knight => pieceCase(side, ChessParameters.PieceNotation.Knight.toString)
+      case _ => pieceCase(contents.get)
     }
   }
-
 }
 
 object Square {
-  def apply(row: Int, col: Int, contents: ChessParameters.Value, side: Option[ChessParameters.Value]): Square = new Square(row, col, contents, side)
+  def apply(row: Int, col: Int, contents: Option[Piece]): Square = new Square(row, col, contents)
 }

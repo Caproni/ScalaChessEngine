@@ -1,6 +1,6 @@
 package com.huginnmuninnresearch.chess.grading
 
-import com.huginnmuninnresearch.chess.state.{Board, Winner}
+import com.huginnmuninnresearch.chess.state.Board
 
 class ChessGame(white: Player, black: Player, result: Option[Winner.Value] = None) {
   val state: Board = new Board(white, black)

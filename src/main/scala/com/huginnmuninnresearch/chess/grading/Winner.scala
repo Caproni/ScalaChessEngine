@@ -1,4 +1,4 @@
-package com.huginnmuninnresearch.chess.state
+package com.huginnmuninnresearch.chess.grading
 
 object Winner extends Enumeration {
   val White: Value = Value(1)

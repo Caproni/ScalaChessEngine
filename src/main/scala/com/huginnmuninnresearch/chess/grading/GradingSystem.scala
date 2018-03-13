@@ -1,6 +1,6 @@
 package com.huginnmuninnresearch.chess.grading
 
-import com.huginnmuninnresearch.chess.state.Winner
+import Winner
 
 class GradingSystem {
   import Math._
