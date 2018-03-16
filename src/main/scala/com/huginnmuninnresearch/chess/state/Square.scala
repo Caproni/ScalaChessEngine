@@ -1,45 +1,56 @@
 package com.huginnmuninnresearch.chess.state
 
 import com.huginnmuninnresearch.chess.pieces.Piece
+import com.huginnmuninnresearch.chess.pieces.Piece.{index, indices}
 
-class Square(val row: Int, val col: Int, private var contents: Option[Piece]) {
-  def this(row: Int, col: Int) = this(row, col, Chess.Empty, None)
+class Square(val loc: index, private var _piece: Option[Piece]) {
+
+  def this(row: Int, col: Int) = this((row, col), None)
+  def this(loc: index) = this(loc, None)
+
+  def legal(board: Board, moveHistory: indices): indices = ???
 
   def colour: Chess.Value = {
-    (row + col) % 2 match {
+    (loc._1 + loc._2) % 2 match {
       case 0 => Chess.White
       case _ => Chess.Black
     }
   }
 
-  def empty(): Unit = {
-    contents = None
+  def pop: Option[Piece] = {
+    val piece = piece
+    _piece = None
+    piece
   }
 
   def fill(piece: Piece): Unit = {
-    contents = Some(piece)
+    _piece = Some(piece)
+  }
+
+  def capture(attacker: Piece): Option[Piece] = {
+    val captured = piece
+    _piece = Some(attacker)
+    captured
+  }
+
+  def piece: Option[Piece] = {
+    _piece
   }
 
   override def toString: String = {
-    def pieceCase(piece: Piece): String = {
-      piece.owner match {
-        case Chess.White => piece.toString.toUpperCase
-        case _ => piece.toString.toLowerCase
-      }
-    }
-    def squareCase(row: Int, col: Int): String = {
+    def squareCase: String = {
       colour match {
         case Chess.White => " "
         case _ => "."
       }
     }
-    contents.getOrElse(None) match {
-      case None => squareCase(row, col)
-      case _ => pieceCase(contents.get)
+    _piece.getOrElse(None) match {
+      case None => squareCase
+      case _ => _piece.get.toString
     }
   }
 }
 
 object Square {
-  def apply(row: Int, col: Int, contents: Option[Piece]): Square = new Square(row, col, contents)
+  def apply(loc: index, contents: Option[Piece]): Square = new Square(loc, contents)
 }
