@@ -1,6 +1,7 @@
 package com.huginnmuninnresearch.chess.state
 
 import com.huginnmuninnresearch.chess.grading.Player
+import com.huginnmuninnresearch.chess.pieces.Piece.Index
 import com.huginnmuninnresearch.chess.pieces._
 
 import scala.annotation.tailrec
@@ -34,10 +35,13 @@ class Board(val white: Player, val black: Player) {
   private def clean: Squares = {
     val empty = Array.ofDim[Square](boardSize)
     for (e <- 0 until boardSize) {
-      empty(e) = Square((e % sideSize, e / sideSize), None)
+      empty(e) = Square(EToIdx(e), None)
     }
     empty
   }
+
+  private def IdxToE(index: Index): Int = index._1 + sideSize*index._2
+  private def EToIdx(e: Int): Index = (e % sideSize, e/sideSize)
 
   private def initialiseBoard: Squares = {
     val empty: Squares = clean
@@ -53,10 +57,11 @@ class Board(val white: Player, val black: Player) {
     empty
   }
 
-  def movePiece(From: (Int, Int), To: (Int, Int)): Unit = {
+  def movePiece(piece: Piece, To: Index): Unit = {
+    require(squares(IdxToE(piece.loc)).piece.get.legal(squares))
     for (e <- 0 until boardSize) yield squares(e).loc match {
-      case From => {require(squares(e).piece.getOrElse(None) != None); squares(e).piece.legal(squares, To)}
-      case To => squares(e).piece.
+      case From => ; squares(e).piece.legal(squares, To)
+      case To => require(piece.owner != squares(e).piece.get.owner); squares(e).piece.
       case _ => ()
     }
   }
@@ -69,9 +74,9 @@ class Board(val white: Player, val black: Player) {
     def constructString(squares: Squares, result: String): String = {
       if (squares.nonEmpty) {
         def wrap(square: Square): String = {
-          square.loc._2 match {
-            case 0 => "|"+square.toString
-            case sideSize.-(1) => square.toString+"|\n"
+          1+square.loc._2 match {
+            case 1 => "|"+square.toString
+            case `sideSize` => square.toString+"|\n"
             case _ => square.toString
           }
         }
@@ -85,6 +90,7 @@ class Board(val white: Player, val black: Player) {
 object Board {
   type Squares = Array[Square]
   type Pieces = Array[Piece]
+  type Moves = Array[Move]
 
   final val sideSize: Int = 8 // length of a row or column
   final val boardSize: Int = 64 // number of squares on a chess board

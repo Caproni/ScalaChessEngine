@@ -1,14 +1,14 @@
 package com.huginnmuninnresearch.chess.state
 
 import com.huginnmuninnresearch.chess.pieces.Piece
-import com.huginnmuninnresearch.chess.pieces.Piece.{index, indices}
+import com.huginnmuninnresearch.chess.pieces.Piece.{Index, Indices}
 
-class Square(val loc: index, private var _piece: Option[Piece]) {
+class Square(val loc: Index, private var _piece: Option[Piece]) {
 
   def this(row: Int, col: Int) = this((row, col), None)
-  def this(loc: index) = this(loc, None)
+  def this(loc: Index) = this(loc, None)
 
-  def legal(board: Board, moveHistory: indices): indices = ???
+  def legal(board: Board, moveHistory: Indices): Indices = ???
 
   def colour: Chess.Value = {
     (loc._1 + loc._2) % 2 match {
@@ -52,5 +52,5 @@ class Square(val loc: index, private var _piece: Option[Piece]) {
 }
 
 object Square {
-  def apply(loc: index, contents: Option[Piece]): Square = new Square(loc, contents)
+  def apply(loc: Index, contents: Option[Piece]): Square = new Square(loc, contents)
 }
