@@ -1,34 +1,57 @@
 package com.huginnmuninnresearch.chess.state
 
+import com.huginnmuninnresearch.chess.notation.AlgebraicNotation.iToA
 import com.huginnmuninnresearch.chess.pieces.Piece
 import com.huginnmuninnresearch.chess.pieces.Piece.{Index, Indices}
+import com.huginnmuninnresearch.chess.state.Board._
+import com.huginnmuninnresearch.chess.state.Moves.Gameplay
+import com.typesafe.scalalogging.LazyLogging
 
-class Square(val loc: Index, private var _piece: Option[Piece]) {
+class Square(val loc: Index, private var _piece: Option[Piece]) extends LazyLogging {
 
   def this(row: Int, col: Int) = this((row, col), None)
   def this(loc: Index) = this(loc, None)
 
-  def legal(board: Board, moveHistory: Indices): Indices = ???
+  val location: String = iToA(loc)
 
-  def colour: Chess.Value = {
+  def legal(b: Board, mH: Gameplay): Indices = {
+    if (_piece == None) Array() else _piece.get.legal(b, mH)
+  }
+
+  private def colour: String = {
     (loc._1 + loc._2) % 2 match {
-      case 0 => Chess.White
-      case _ => Chess.Black
+      case 0 => WHITE
+      case _ => BLACK
     }
   }
 
   def pop: Option[Piece] = {
-    val piece = piece
-    _piece = None
+    val piece: Option[Piece] = _piece
+    empty()
     piece
+  }
+
+  def empty(): Unit = {
+    _piece = None
+  }
+
+  def enter(piece: Piece): Unit = {
+    piece.moved = true
+    piece.updatePosition(loc)
+    _piece = Some(piece)
   }
 
   def fill(piece: Piece): Unit = {
     _piece = Some(piece)
   }
 
+  def fill(piece: Option[Piece]): Unit = {
+    _piece = piece
+  }
+
   def capture(attacker: Piece): Option[Piece] = {
     val captured = piece
+    attacker.moved = true
     _piece = Some(attacker)
     captured
   }
@@ -40,8 +63,8 @@ class Square(val loc: Index, private var _piece: Option[Piece]) {
   override def toString: String = {
     def squareCase: String = {
       colour match {
-        case Chess.White => " "
-        case _ => "."
+        case WHITE => "."
+        case BLACK => " "
       }
     }
     _piece.getOrElse(None) match {

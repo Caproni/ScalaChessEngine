@@ -1,71 +1,198 @@
 package com.huginnmuninnresearch.chess.pieces
 
-import Piece._
 import com.huginnmuninnresearch.chess.state.Board._
-import com.huginnmuninnresearch.chess.state.{Board, Chess, Move}
+import com.huginnmuninnresearch.chess.state.{Board, Move}
+import com.huginnmuninnresearch.chess.state.Moves.Gameplay
+import com.huginnmuninnresearch.chess.notation.AlgebraicNotation._
+import Piece._
+import com.typesafe.scalalogging.LazyLogging
 
-import scala.annotation.tailrec
+import scala.collection.mutable.ListBuffer
 
+abstract sealed class Piece(val owner: String) extends LazyLogging {
 
-abstract sealed class Piece(val owner: Chess.Value, var loc: Index) {
   val id: String
-  def totalCoverage: Indices // accessible squares not accounting for other pieces on the board
-  def accessible(ps: Pieces): Indices // accessible squares accounting for other pieces on the board
-  def attack(b: Board, ps: Pieces, mH: Array[Move]): Pieces // enemy pieces which are attacked by this piece
-  def defend(ps: Pieces): Pieces // friendly pieces which are defended by this piece
-  def legal(b: Board, moveHistory: Array[Move]): Indices // legal moves for this piece
+  var loc: Index
+  var location: String
+
+  def totalCoverage(implicit b: Board, mH: Gameplay): Indices // accessible squares not accounting for other pieces on the board
+  def accessible(implicit b: Board, moveHistory: Gameplay = ListBuffer()): Indices // accessible squares accounting for other pieces on the board
+  def moved: Boolean
+  def moved_=(moved: Boolean): Unit
   def toString: String
+
+  def copy(): Piece
+
+  protected def printer(output: String, tO: TraversableOnce[Index]): Unit = {
+    println(s"$id on ${location.toLowerCase} has $output:")
+    if (tO.nonEmpty) tO.map(iToA(_).toLowerCase + " ").foreach(print)
+    println
+  }
+
+  def updatePosition(newLoc: Index): Unit = {
+    loc = newLoc
+    location = iToA(newLoc)
+  }
+
+  def updatePosition(newLocation: String): Unit = {
+    loc = aToI(newLocation)
+    location = newLocation
+  }
+
+  protected def bishopAccess(implicit b: Board): Indices = {
+
+    val nE: Indices = (for { // TODO inefficient code
+      d <- 1 until SIDE
+      blocker = for (
+        dSub <- 1 until d
+        if onBoard((loc._1+d, loc._2+d))
+      ) yield b.pieceExists((loc._1+dSub, loc._2+dSub))
+      if onBoard((loc._1+d, loc._2+d)) && !(blocker.foldLeft(false)(_ || _) || b.forcePieceExists((loc._1+d, loc._2+d), owner))
+    } yield (loc._1+d, loc._2+d)).to[Array]
+
+    val sW: Indices = (for {
+      d <- 1 until SIDE
+      blocker = for (
+        dSub <- 1 until d
+        if onBoard((loc._1-d, loc._2-d))
+      ) yield b.pieceExists((loc._1-dSub, loc._2-dSub))
+      if onBoard((loc._1-d, loc._2-d)) && !(blocker.foldLeft(false)(_ || _) || b.forcePieceExists((loc._1-d, loc._2-d), owner))
+    } yield (loc._1-d, loc._2-d)).to[Array]
+
+    val nW: Indices = (for {
+      d <- 1 until SIDE
+        blocker = for (
+          dSub <- 1 until d
+          if onBoard((loc._1+d, loc._2-d))
+        ) yield b.pieceExists((loc._1 + dSub, loc._2 - dSub))
+        if onBoard((loc._1+d, loc._2-d)) && !(blocker.foldLeft(false)(_ || _) || b.forcePieceExists((loc._1 + d, loc._2 - d), owner))
+    } yield (loc._1+d, loc._2-d)).to[Array]
+
+    val sE: Indices = (for {
+      d <- 1 until SIDE
+      blocker = for (
+        dSub <- 1 until d
+        if onBoard((loc._1-d, loc._2+d))
+      ) yield b.pieceExists((loc._1-dSub, loc._2+dSub))
+      if onBoard((loc._1-d, loc._2+d)) && !(blocker.foldLeft(false)(_ || _) || b.forcePieceExists((loc._1-d, loc._2+d), owner))
+    } yield (loc._1-d, loc._2+d)).to[Array]
+
+    val accessible: Indices = (nE ++: sE ++: nW ++: nE).distinct.filterNot(_ == loc)
+    accessible
+  }
+
+  protected def rookAccess(implicit b: Board): Indices = {
+    val north: Indices = (for { // TODO inefficient code
+      x <- loc._2+1 until SIDE
+      blocker = for (sub <- loc._2+1 until x) yield b.pieceExists((loc._1, sub))
+      if !(blocker.foldLeft(false)(_ || _) || b.forcePieceExists((loc._1, x), owner))
+    } yield (loc._1, x)).to[Array]
+
+    val south: Indices = (for {
+      x <- 0 until loc._2
+      blocker = for (sub <- x+1 until loc._2) yield b.pieceExists((loc._1, sub))
+      if !(blocker.foldLeft(false)(_ || _) || b.forcePieceExists((loc._1, x), owner))
+    } yield (loc._1, x)).to[Array]
+
+    val east: Indices = (for {
+      x <- loc._1+1 until SIDE
+      blocker = for (sub <- loc._1+1 until x) yield b.pieceExists((sub, loc._2))
+      if !(blocker.foldLeft(false)(_ || _) || b.forcePieceExists((x, loc._2), owner))
+    } yield (x, loc._2)).to[Array]
+
+    val west: Indices = (for {
+      x <- 0 until loc._1
+      blocker = for (sub <- x+1 until loc._1) yield b.pieceExists((sub, loc._2))
+      if !(blocker.foldLeft(false)(_ || _) || b.forcePieceExists((x, loc._2), owner))
+    } yield (x, loc._2)).to[Array]
+
+    val accessible: Indices = (north ++: south ++: east ++: west).distinct.filterNot(_ == loc)
+    accessible
+  }
+
+  def attack(implicit b: Board, mH: Gameplay): Pieces = b.pieces(accessible.filter(b.forcePieceExists(_, b.opponent(owner))))
+
+  def defend(implicit b: Board, mH: Gameplay): Pieces = b.pieces(accessible.filter(b.forcePieceExists(_, owner)))
+
+  def legal(implicit b: Board, moveHistory: Gameplay): Indices = { // legal moves for this piece
+    import com.huginnmuninnresearch.chess.notation.AlgebraicNotation._
+    val indices = accessible(b, moveHistory).filterNot(_ == b.king(b.opponent(owner)).loc).filterNot(_ == b.king(owner).loc)
+    var legalMoves: Indices = Array[Index]()
+    for (index <- indices) {
+      val future = b.propose(this, index, moveHistory)
+      val fMH = moveHistory :+ Move(this, index, b.piece(index), if (b.check(b.opponent(owner), moveHistory)) CHECK else NORMAL)
+      legalMoves = if (!future.check(owner, fMH)) legalMoves :+ index else legalMoves
+    }
+//    printer("legal", legalMoves)
+    legalMoves
+  }
+
   protected def pieceCase(name: String): String = {
     owner match {
-      case Chess.White => name.toString.toUpperCase
-      case _ => name.toString.toLowerCase
+      case WHITE => name.toString.toUpperCase
+      case BLACK => name.toString.toLowerCase
     }
   }
+
   protected def onBoard(index: Index): Boolean = {
-    if (0 <= index._1 && 0 <= index._2 && index._1 < sideSize && index._2 < sideSize) true else false
+    if (0 <= index._1 && 0 <= index._2 && index._1 < SIDE && index._2 < SIDE) true else false
   }
 }
 
-case class Bishop(override val owner: Chess.Value, override var loc: Index) extends Piece(owner, loc) {
-  override val id: String = "Bishop"
-  override def totalCoverage: Indices = {
-    def downSelect(index: Index): Indices = {
-      val coverage: Indices = Array()
-      for (x <- -sideSize until sideSize) {
-        val locationA = (loc._1+x, loc._2+x) // diagonal
-        if (onBoard(locationA)) coverage:+locationA
-        val locationB = (loc._1+x, loc._2-x) // perpendicular
-        if (onBoard(locationB)) coverage:+locationB
-      }
-      coverage
-    }
-    downSelect(loc)
-  }
-  override def attack(b: Board, ps: Pieces, mH: Array[Move]): Pieces = {
-    for {p <- ps; if legal(b, mH).foldLeft(false)(_ || _ == p.loc)} yield p
-  }
-  override def defend(ps: Pieces): Pieces = ???
+case class Bishop(override val owner: String = WHITE, var loc: Index = (-1, -1), var moved: Boolean = false) extends Piece(owner) {
 
-  override def legal(b: Board, mH: Array[Move]): Indices = {
-//    if (moveHistory.head.result == Move.check) true else false
-    ???
+  override val id: String = "Bishop"
+
+  override def copy(): Bishop = Bishop(owner, loc, moved)
+
+  override var location: String = iToA(loc)
+
+  override def totalCoverage(implicit b: Board, mH: Gameplay): Indices = {
+    val coverage: Indices = Array()
+    for (x <- -SIDE until SIDE) {
+      val locationA = (loc._1+x, loc._2+x) // main diagonal
+      if (onBoard(locationA)) coverage:+locationA
+      val locationB = (loc._1+x, loc._2-x) // perpendicular
+      if (onBoard(locationB)) coverage:+locationB
+    }
+    val tC = coverage.distinct.filter(_ != loc)
+    tC
+  }
+
+  override def accessible(implicit b: Board, mH: Gameplay): Indices = {
+    val accessible = bishopAccess
+    accessible
   }
 
   override def toString: String = pieceCase("B")
 }
 
-case class King(override val owner: Chess.Value, override var loc: Index) extends Piece(owner, loc) {
+case class King(override val owner: String = WHITE, var loc: Index = (-1, -1), var moved: Boolean = false) extends Piece(owner) {
+
   override val id: String = "King"
-  override def totalCoverage: Indices = {
-    for (col <- downSelect(loc._1); row <- downSelect(loc._2)) yield (row, col)
-  }
-  override def attack(ps: Pieces): Indices = {
-    for {col <- downSelect(loc._1)
-         row <- downSelect(loc._2)
-         if ps.getorElse(true)} yield (row, col)
+
+  override def copy(): King = King(owner, loc, moved)
+
+  override var location: String = iToA(loc)
+
+  override def totalCoverage(implicit b: Board, mH: Gameplay = ListBuffer()): Indices = {
+    val tC = getCoverage(b)
+    tC
   }
 
-  override def legal(b: Board, moveHistory: Array[Move]): Indices = ???
+  private def getCoverage(b: Board): Indices = {
+    var coverage = for (row <- downSelect(loc._1); col <- downSelect(loc._2)) yield (row, col)
+    coverage = if (castle(b, KS)) coverage :+ aToI(KSCOLUMN+(if (owner == WHITE) "1" else "8")) else coverage
+    coverage = if (castle(b, QS)) coverage :+ aToI(QSCOLUMN+(if (owner == WHITE) "1" else "8")) else coverage
+    val tC = coverage.filterNot(_ == loc)
+    tC
+  }
+
+  override def accessible(implicit b: Board, mH: Gameplay): Indices = {
+    val tC = getCoverage(b)
+    val accessible = tC.filterNot(b.forcePieceExists(_, owner))
+    accessible
+  }
 
   private def downSelect(index: Int): Array[Int] = {
     index match {
@@ -74,42 +201,211 @@ case class King(override val owner: Chess.Value, override var loc: Index) extend
       case _ => Array(index-1, index, index+1)
     }
   }
+
+  def check(implicit b: Board): Boolean = {
+    val opponent = b.opponent(owner)
+    val oP = b.pieces(opponent).filterNot(_.id == id) // kings cannot place one another in check
+    val checkTable = for (p <- oP) yield p.accessible(b).contains(loc)
+    val checkStatus = checkTable.foldLeft(false)(_ || _)
+    checkStatus
+  }
+
+  def checkmate(implicit b: Board, mH: Gameplay): Boolean = if (check(b) && b.moves(owner, mH).isEmpty) true else false
+
+  def castle(implicit b: Board, side: String): Boolean = {
+    val col: String = side match {case KS => "H" case QS => "A"}
+    val row: String = owner match {case WHITE => "1" case BLACK => "8"}
+    val rookMoved: Boolean = b.piece(aToI(col+row)).getOrElse(None) match {
+      case None => true
+      case _ => b.piece(aToI(col+row)).get.moved
+    }
+
+    val cols: Array[String] = side match {case KS => Array("F", "G") case QS => Array("B", "C")}
+    val clearPath: Boolean = (for {column <- cols} yield b.piece(aToI(column+row)).getOrElse(None) match {
+      case None => b.numberAttacking(b.opponent(owner), aToI(column+row)) == 0
+      case _ => false
+    }).forall(x => x)
+    if (!check(b) && !moved && !rookMoved && clearPath) true else false
+  }
+
   override def toString: String = pieceCase("K")
 }
 
-case class Knight(override val owner: Chess.Value, override var loc: Index) extends Piece(owner, loc) {
+case class Knight(override val owner: String = WHITE, var loc: Index = (-1, -1), var moved: Boolean = false) extends Piece(owner) {
+
   override val id: String = "Knight"
-  override def totalCoverage: Indices = ???
-  override def attack(ps: Pieces): Indices = ???
-  override def legal(b: Board, moveHistory: Array[Move]): Indices = ???
+
+  override def copy(): Knight = Knight(owner, loc, moved)
+
+  override var location: String = iToA(loc)
+
+  override def totalCoverage(implicit b: Board, mH: Gameplay): Indices = {
+    val tC = for (km <- knightMoves.filter(f => onBoard(f._1+loc._1, f._2+loc._2))) yield (loc._1+km._1, loc._2+km._2)
+    tC
+  }
+
+  override def accessible(implicit b: Board, mH: Gameplay): Indices = {
+    val accessible = (for (km <- knightMoves.filter(f => onBoard(f._1+loc._1, f._2+loc._2))) yield (loc._1+km._1, loc._2+km._2)).filterNot(b.forcePieceExists(_, owner))
+    accessible
+  }
+
   override def toString: String = pieceCase("N")
 }
 
-case class Pawn(override val owner: Chess.Value, override var loc: Index) extends Piece(owner, loc) {
+case class Pawn(override val owner: String = WHITE, var loc: Index = (-1,-1), var moved: Boolean = false) extends Piece(owner) {
+
   override val id: String = "Pawn"
-  override def totalCoverage: Indices = ???
-  override def attack(ps: Pieces): Indices = ???
-  override def legal(b: Board, moveHistory: Array[Move]): Indices = ???
+
+  override def copy(): Pawn = Pawn(owner, loc, moved)
+
+  override var location: String = iToA(loc)
+
+  override def totalCoverage(implicit b: Board, mH: Gameplay): Indices = { // exists as a wrapper in case trace should be added
+    val tC = getCoverage
+    tC
+  }
+
+  private def getCoverage(implicit b: Board): Indices = {
+    val front = if (owner == WHITE) 1 else -1
+    var tC: Indices = Array[Index]()
+    tC = if (loc._1 != 7 || loc._1 != 0) {
+      var temp = tC :+ (loc._1 + front, loc._2)
+      temp = if (startingRow) temp :+ (loc._1 + (2*front), loc._2) else temp
+      loc._2 match {
+        case 0 => temp :+ (loc._1 + front, loc._2 + 1) // column "a"
+        case 7 => temp :+ (loc._1 + front, loc._2 - 1) // column "h"
+        case _ => temp :+ (loc._1 + front, loc._2 + 1) :+ (loc._1 + front, loc._2 - 1)
+      }
+    } else tC
+    tC.filterNot(b.forcePieceExists(_, owner))
+  }
+
+  override def accessible(implicit b: Board, mH: Gameplay): Indices = {
+    import Math._
+    val front = if (owner == WHITE) 1 else -1
+    var accessible: Indices = getCoverage
+    val frontBlocked = b.pieceExists((loc._1+front, loc._2))
+    val noDouble = frontBlocked || b.pieceExists((loc._1+2*front, loc._2))
+    for (index <- accessible) yield (abs(index._1-loc._1), abs(index._2-loc._2)) match {
+      case (_,1) => accessible = if (b.pieceExists(index)) accessible else accessible.filterNot(_ == index) // attacking squares
+      case (1,0) => accessible = if (frontBlocked) accessible.filterNot(_ == index) else accessible // double push
+      case (2,0) => accessible = if (noDouble) accessible.filterNot(_ == index) else accessible // double push
+      case (_,_) => accessible
+    }
+    accessible
+  }
+
+  private def startingRow: Boolean = {
+    val row = if (owner == WHITE) 1 else 6
+    if ((owner == WHITE && loc._1 == row) || (owner == BLACK && loc._1 == row)) true else false
+  }
+
+  private def enPassant(implicit b: Board, mH: Gameplay): Option[Piece] = {
+    import Math._
+    val passingRow: Boolean = loc._1 == (if (owner == WHITE) 4 else 3)
+    val lastPiecePawn: Boolean = mH.last.piece.id == "Pawn"
+    val adjacentColumn: Boolean = loc._2 == mH.last.piece.loc._2-1 || loc._2 == mH.last.piece.loc._2+1
+    val lastPieceTwoSpace: Boolean = abs(mH.last.piece.loc._1 - mH.last.to._1) == 2
+    if (passingRow && lastPiecePawn && adjacentColumn && lastPieceTwoSpace) {
+      Some(mH.last.piece)
+    } else None
+  }
+
+  override def attack(implicit b: Board, mH: Gameplay): Pieces = {
+    val diags = Array((loc._1+1, loc._2+1), (loc._1+1, loc._2-1))
+    var attack: Pieces = Array[Piece]()
+    for (diag <- diags) {
+      attack = if (b.piece(diag).nonEmpty && (b.piece(diag).get.owner == b.opponent(owner))) {
+        attack :+ b.piece(diag).get
+      } else attack
+    }
+    if (enPassant(b, mH).nonEmpty) attack :+ enPassant(b, mH).get else attack
+  }
+
+  override def defend(implicit b: Board, mH: Gameplay): Pieces = {
+    val diags = Array((loc._1+1, loc._2+1), (loc._1+1, loc._2-1))
+    var defend: Pieces = Array[Piece]()
+    for (diag <- diags) {
+      defend = if (b.piece(diag).nonEmpty && (b.piece(diag).get.owner == owner)) {
+        defend :+ b.piece(diag).get
+      } else defend
+    }
+    defend
+  }
+
+  def promote: Boolean = loc._1 == (if (owner == WHITE) 7 else 0)
+
   override def toString: String = pieceCase("P")
 }
 
-case class Queen(override val owner: Chess.Value, override var loc: Index) extends Piece(owner, loc) {
+case class Queen(override val owner: String = WHITE, var loc: Index = (-1, -1), var moved: Boolean = false) extends Piece(owner) {
+
   override val id: String = "Queen"
-  override def totalCoverage: Indices = ???
-  override def attack(ps: Pieces): Indices = ???
-  override def legal(b: Board, moveHistory: Array[Move]): Indices = ???
+
+  override def copy(): Queen = Queen(owner, loc, moved)
+
+  override var location: String = iToA(loc)
+
+  override def totalCoverage(implicit b: Board, mH: Gameplay): Indices = {
+
+    val column =  for (x <- 0 until SIDE) yield (loc._1, x)
+    val row = for (y <- 0 until SIDE) yield (y, loc._2)
+
+    val diagonal = for (
+      mod <- 1-SIDE until SIDE;
+      x = loc._1 + mod;
+      y = loc._2 + mod
+      if onBoard((x, y))) yield (x, y)
+
+    val off = for (
+      mod <- 1-SIDE until SIDE;
+      x = loc._1 + mod;
+      y = loc._2 - mod
+      if onBoard((x, y))) yield (x, y)
+    
+    val tC = column.++:(row).++:(off).++:(diagonal).distinct.filter(_ != loc).to[Array]
+    tC
+  }
+
+  override def accessible(implicit b: Board, mH: Gameplay): Indices = {
+    val accessible = rookAccess ++: bishopAccess
+    accessible
+  }
+
   override def toString: String = pieceCase("Q")
 }
 
-case class Rook(override val owner: Chess.Value, override var loc: Index) extends Piece(owner, loc) {
+case class Rook(override val owner: String = WHITE, var loc: Index = (-1, -1), var moved: Boolean = false) extends Piece(owner) {
+
   override val id: String = "Rook"
-  override def totalCoverage: Indices = ???
-  override def attack(ps: Pieces): Indices = ???
-  override def legal(b: Board, moveHistory: Array[Move]): Indices = ???
+
+  override def copy(): Rook = Rook(owner, loc, moved)
+
+  override var location: String = iToA(loc)
+
+  override def totalCoverage(implicit b: Board, mH: Gameplay): Indices = {
+    val column: Indices = (for (x <- 0 until SIDE) yield (loc._1, x)).to[Array]
+    val row: Indices = (for (y <- 0 until SIDE) yield (y, loc._2)).to[Array]
+    val tC: Indices = column.++:(row).distinct.filterNot(_ == loc)
+    tC
+  }
+
+  override def accessible(implicit b: Board, mH: Gameplay): Indices = {
+    val accessible = rookAccess
+    accessible
+  }
+
   override def toString: String = pieceCase("R")
 }
 
 object Piece {
+
   type Index = (Int, Int)
   type Indices = Array[Index]
+  final val KS: String = "KingSide"
+  final val QS: String = "QueenSide"
+  final val KSCOLUMN: String = "G"
+  final val QSCOLUMN: String = "C"
+  final val knightMoves = Array((1, 2), (-1, 2), (1, -2), (-1, -2), (-2, 1), (-2, -1), (2, 1), (2, -1))
+
 }

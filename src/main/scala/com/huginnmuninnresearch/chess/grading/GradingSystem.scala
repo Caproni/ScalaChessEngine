@@ -1,15 +1,16 @@
 package com.huginnmuninnresearch.chess.grading
 
-import Winner
+import com.typesafe.scalalogging.LazyLogging
 
-class GradingSystem {
+class GradingSystem extends LazyLogging {
   import Math._
+  import com.huginnmuninnresearch.chess.state.Board._
 
-  def updateGrades(result: Winner.Value, whiteGrade: Int, blackGrade: Int): (Int, Int) = {
+  def updateGrades(result: String, whiteGrade: Int, blackGrade: Int): (Int, Int) = {
     result match {
-      case Winner.White => (whiteGrade + 20 / (whiteGrade - blackGrade), blackGrade)
-      case Winner.Black => (abs(whiteGrade - blackGrade) / whiteGrade, blackGrade)
-      case Winner.Draw => (abs(whiteGrade - blackGrade) / whiteGrade, blackGrade)
+      case WHITE => (whiteGrade + 20 / (whiteGrade - blackGrade), blackGrade)
+      case BLACK => (abs(whiteGrade - blackGrade) / whiteGrade, blackGrade)
+      case DRAW => (abs(whiteGrade - blackGrade) / whiteGrade, blackGrade)
       case _ => println("Check grading system inputs. Original grades returned"); (whiteGrade, blackGrade)
     }
   }

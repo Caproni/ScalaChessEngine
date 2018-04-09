@@ -6,9 +6,11 @@ import com.huginnmuninnresearch.chess.state.Board
 class Engine {
   import Board._
 
-  def bestMove(state: Board) = ???
+  def bestMove(state: Board) = {
+    ???
+  }
 
-  private def totalAvailableMoves(state: boardT): Int = {
+  private def totalAvailableMoves(implicit squares: Squares): Int = {
     1
   }
 
@@ -27,6 +29,8 @@ class Engine {
 }
 
 object Engine {
+
+  def apply: Engine = new Engine
 
   val searchDepth: Int = 5
 
