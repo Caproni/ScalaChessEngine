@@ -28,17 +28,32 @@ class Board(val white: Player, val black: Player) {
   def numberAttacking(owner: String, index : Index): Int = {
     val number = for {
       piece <- pieces(owner).filterNot(_.id == "King")
-      ind <- piece.accessible(this)
-      if index == ind
+      if piece.accessible(this).contains(index)
     } yield piece
-    number.length + king(owner).totalCoverage(this).contains(index)
+    number.length + king(owner).immediateCoverage(this).contains(index)
+  }
+
+  def piecesAttacking(owner: String, index : Index): Pieces = {
+    val attackers = for {
+      piece <- pieces(owner).filterNot(_.id == "King")
+      if piece.accessible(this).contains(index)
+    } yield piece
+    if (king(owner).immediateCoverage(this).contains(index)) attackers :+ king(owner) else attackers
   }
 
   def moves(owner: String, mH: Gameplay): Gameplay = {
+    import com.huginnmuninnresearch.chess.notation.AlgebraicNotation._
     (for {
       piece <- pieces(owner)
       index <- piece.legal(this, mH)
-    } yield Move(piece, index, squares(idxToE(index)).piece, if (king(opponent(owner)).check(this)) CHECK else NORMAL)).to[ListBuffer]
+      checkStatus: String = if (king(opponent(owner)).check(this)) CHECK else NORMAL
+      promotionOption = if (canPromote(piece)) Array("B", "N", "Q", "K") else Array("")
+      option <- promotionOption
+    } yield Move(piece, index, squares(idxToE(index)).piece, option + checkStatus)).to[ListBuffer]
+  }
+
+  def stalemate(owner: String, mH: Gameplay): Boolean = {
+    if (moves(owner, mH).isEmpty) true else false
   }
 
   def castle(owner: String, side: String, mH: Gameplay = ListBuffer()): Unit = {
@@ -56,9 +71,19 @@ class Board(val white: Player, val black: Player) {
   def check(owner: String, mH: Gameplay): Boolean = king(owner).check(this)
 
   def promote(pawn: Pawn, choice: String): Unit = {
-    require(Array("Bishop", "Knight", "Queen", "Rook").contains(choice))
-    squares(idxToE(pawn.loc))
+    require(Array("B", "N", "Q", "R").contains(choice.toUpperCase))
+    val newPiece = choice match {
+      case "B" => Bishop(pawn.owner, pawn.loc, pawn.moved)
+      case "N" => Knight(pawn.owner, pawn.loc, pawn.moved)
+      case "Q" => Queen(pawn.owner, pawn.loc, pawn.moved)
+      case "R" => Rook(pawn.owner, pawn.loc, pawn.moved)
+    }
+    squares(idxToE(pawn.loc)).fill(newPiece.asInstanceOf[Piece])
   }
+
+  def canPromote(piece: Piece): Boolean = if (piece.id == "P" && ((piece.loc._1 == 0 && piece.owner == "Black") || (piece.loc._1 == 7 && piece.owner == "White"))) {
+    true
+  } else false
 
   def king(owner: String): King = {
     val somePieces = pieces(owner)
@@ -68,8 +93,10 @@ class Board(val white: Player, val black: Player) {
   }
 
   def result(justMoved: String, mH: Gameplay): Option[String] = {
-    if (king(opponent(justMoved)).checkmate(this, mH)) Some(justMoved) else None
+    if (checkmate(justMoved, mH)) Some(justMoved) else None
   }
+
+  def checkmate(owner: String, mH: Gameplay): Boolean = king(opponent(owner)).checkmate(this, mH)
 
   def opponent(owner: String): String = {
     owner match {
@@ -158,7 +185,7 @@ class Board(val white: Player, val black: Player) {
 
   def propose(piece: Piece, to: Index, mH: Gameplay): Board = {
     val future = replicate(mH)
-    future.move(piece.copy(), to)
+    future.move(piece.copy, to)
     future
   }
 
@@ -180,7 +207,11 @@ class Board(val white: Player, val black: Player) {
       val side = if (m.to._2 == aToC("g")) KS else QS
       castle(m.piece.owner, side)
     } else {
-      move(m.piece, m.to)
+      squares(idxToE(m.piece.loc)).empty()
+      val movedPiece = Pawn(m.piece.owner, m.to, m.piece.moved)
+      if (canPromote(m.piece)) {
+        promote(movedPiece, m.result.substring(0, 1))
+      } else squares(idxToE(m.to)).enter(m.piece)
     }
   }
 
@@ -225,6 +256,4 @@ object Board {
   final val BLACK: String = "Black"
   final val DRAW: String = "Draw"
 
-  final val CHECK: String = "Check"
-  final val NORMAL: String = ""
 }

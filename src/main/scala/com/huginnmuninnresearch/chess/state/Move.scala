@@ -16,6 +16,8 @@ case class Move(piece: Piece, to: Index, taken: Option[Piece], result: String = 
     if (piece.id == "King" && !piece.moved && (to._2 == aToC("g") || to._2 == aToC("c"))) true else false
   }
 
+  def copy: Move = Move(piece.copy, to, taken, result)
+
   override def toString: String = {
     (if (piece.toString.toUpperCase == "P") "" else piece.toString.toUpperCase) + piece.location.toLowerCase + " -> " + iToA(to).toLowerCase + " (" + taken.getOrElse("-").toString.toUpperCase + ") " + result
   }

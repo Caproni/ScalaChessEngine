@@ -36,9 +36,9 @@ class Square(val loc: Index, private var _piece: Option[Piece]) extends LazyLogg
   }
 
   def enter(piece: Piece): Unit = {
-    piece.moved = true
-    piece.updatePosition(loc)
-    _piece = Some(piece)
+    import Piece._
+    val moved = true
+    _piece = Some(pieceInstance(piece.id, piece.owner, loc, moved))
   }
 
   def fill(piece: Piece): Unit = {
@@ -50,9 +50,10 @@ class Square(val loc: Index, private var _piece: Option[Piece]) extends LazyLogg
   }
 
   def capture(attacker: Piece): Option[Piece] = {
+    import Piece._
     val captured = piece
-    attacker.moved = true
-    _piece = Some(attacker)
+    val moved = true
+    _piece = Some(pieceInstance(attacker.id, attacker.owner, loc, moved))
     captured
   }
 

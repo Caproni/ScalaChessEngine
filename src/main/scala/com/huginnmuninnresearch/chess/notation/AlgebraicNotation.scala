@@ -8,11 +8,23 @@ import com.typesafe.scalalogging.LazyLogging
 object AlgebraicNotation extends LazyLogging {
 
   def parse(implicit b: Board, mover: String, s: String, mH: Gameplay): Option[Move] = {
-    ???
-//    import com.huginnmuninnresearch.chess.pieces.Piece._
-//    import Board._
-//    val len = s.length
-//    if (MAJORPIECES.contains(determinePiece(s.substring(0, 1)).toUpperCase)) { // piece move
+    import com.huginnmuninnresearch.chess.pieces.Piece._
+    val len = s.length
+    val move = if (len == 6 && s.substring(2, 4) == "->") { // algebraic notation for dummies
+      val from: Index = aToI(s.substring(0, 2))
+      val to: Index = aToI(s.substring(4, 6))
+      val checkStatus = if (b.check(b.opponent(b.piece(from).get.owner), mH)) CHECK else NORMAL
+      if (b.piece(from).nonEmpty && b.piece(from).get.legal(b, mH).contains(to)) {
+        Some(Move(b.piece(from).get, to, b.piece(to), checkStatus))
+      } else None
+    } else if (len == 9 && s.substring(2, 4) == "->") {
+      val from: Index = aToI(s.substring(0, 2))
+      val to: Index = aToI(s.substring(4, 6))
+      val checkStatus = if (b.check(b.opponent(b.piece(from).get.owner), mH)) CHECK else NORMAL
+      val promotionChoice: String = s.substring(7, 8)
+      Some(Move(b.piece(from).get, to, b.piece(to), promotionChoice+checkStatus))
+    } else None
+//    else if (MAJORPIECES.contains(determinePiece(s.substring(0, 1)).toUpperCase)) { // piece move
 //      ???
 //    } else if (s.substring(1, 2) == "-") { // castles
 //      val row = if (mover == WHITE) "1" else "8"
@@ -32,6 +44,7 @@ object AlgebraicNotation extends LazyLogging {
 //        Some(Move(b.piece(), aToI(s)))
 //      } else None // no match
 //    }
+    move
   }
 
   def aToR(row: String): Int = {
@@ -83,6 +96,7 @@ object AlgebraicNotation extends LazyLogging {
 
   final val CASTLEKINGS: String = "O-O"
   final val CASTLEQUEENS: String = "O-O-O"
+  final val NORMAL: String = ""
   final val CHECK = "+"
   final val DOUBLECHECK = "++"
   final val CHECKMATE = "#"
