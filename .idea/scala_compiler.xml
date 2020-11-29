@@ -7,6 +7,6 @@
     <option name="featureWarnings" value="true" />
     <option name="explainTypeErrors" value="true" />
     <option name="continuations" value="true" />
-    <profile name="sbt 1" modules="scalanonsense,statistics" />
+    <profile name="sbt 1" modules="ChessEngine,scalanonsense,statistics" />
   </component>
 </project>

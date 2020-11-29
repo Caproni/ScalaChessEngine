@@ -20,8 +20,8 @@ abstract sealed class Piece(val owner: String, val loc: Index, val moved: Boolea
 
   def copy: Piece
 
-  protected def printer(output: String, tO: TraversableOnce[Index]): Unit = {
-    println(s"$id on ${location.toLowerCase} has $output:")
+  protected def printLegalMoves(tO: TraversableOnce[Index]): Unit = {
+    println(s"$owner $id on ${location.toLowerCase} has legal moves:")
     if (tO.nonEmpty) tO.map(iToA(_).toLowerCase + " ").foreach(print)
     println
   }
@@ -69,31 +69,31 @@ abstract sealed class Piece(val owner: String, val loc: Index, val moved: Boolea
   }
 
   protected def rookAccess(implicit b: Board): Indices = {
-    val north: Indices = (for { // TODO inefficient code
-      x <- loc._2+1 until SIDE
-      blocker = for (sub <- loc._2+1 until x) yield b.pieceExists((loc._1, sub))
-      if !(blocker.foldLeft(false)(_ || _) || b.forcePieceExists((loc._1, x), owner))
-    } yield (loc._1, x)).to[Array]
-
-    val south: Indices = (for {
-      x <- 0 until loc._2
-      blocker = for (sub <- x+1 until loc._2) yield b.pieceExists((loc._1, sub))
-      if !(blocker.foldLeft(false)(_ || _) || b.forcePieceExists((loc._1, x), owner))
-    } yield (loc._1, x)).to[Array]
-
     val east: Indices = (for {
-      x <- loc._1+1 until SIDE
-      blocker = for (sub <- loc._1+1 until x) yield b.pieceExists((sub, loc._2))
-      if !(blocker.foldLeft(false)(_ || _) || b.forcePieceExists((x, loc._2), owner))
-    } yield (x, loc._2)).to[Array]
+      x <- loc._2 + 1 until SIDE
+      blocker = for (sub <- loc._2 + 1 until x) yield b.pieceExists((loc._1, sub))
+      if !(blocker.foldLeft(false)(_ || _) || b.forcePieceExists((loc._1, x), owner))
+    } yield (loc._1, x)).to[Array]
 
     val west: Indices = (for {
-      x <- 0 until loc._1
-      blocker = for (sub <- x+1 until loc._1) yield b.pieceExists((sub, loc._2))
+      x <- 0 until loc._2
+      blocker = for (sub <- x + 1 until loc._2) yield b.pieceExists((loc._1, sub))
+      if !(blocker.foldLeft(false)(_ || _) || b.forcePieceExists((loc._1, x), owner))
+    } yield (loc._1, x)).to[Array]
+
+    val north: Indices = (for {
+      x <- loc._1 + 1 until SIDE
+      blocker = for (sub <- loc._1 + 1 until x) yield b.pieceExists((sub, loc._2))
       if !(blocker.foldLeft(false)(_ || _) || b.forcePieceExists((x, loc._2), owner))
     } yield (x, loc._2)).to[Array]
 
-    val accessible: Indices = (north ++: south ++: east ++: west).distinct.filterNot(_ == loc)
+    val south: Indices = (for {
+      x <- 0 until loc._1
+      blocker = for (sub <- x + 1 until loc._1) yield b.pieceExists((sub, loc._2))
+      if !(blocker.foldLeft(false)(_ || _) || b.forcePieceExists((x, loc._2), owner))
+    } yield (x, loc._2)).to[Array]
+
+    val accessible: Indices = north ++: south ++: east ++: west
     accessible
   }
 
@@ -120,7 +120,7 @@ abstract sealed class Piece(val owner: String, val loc: Index, val moved: Boolea
       val fMH = moveHistory :+ Move(this, index, b.piece(index), if (future.check(future.opponent(owner), moveHistory)) CHECK else NORMAL)
       legalMoves = if (!future.check(owner, fMH)) legalMoves :+ index else legalMoves
     }
-//    printer("legal", legalMoves)
+//    printLegalMoves(legalMoves)
     legalMoves
   }
 

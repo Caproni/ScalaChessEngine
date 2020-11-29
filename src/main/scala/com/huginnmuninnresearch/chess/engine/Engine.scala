@@ -15,12 +15,12 @@ class Engine { // eventually will pass constants in as parameters
   def bestMove(current: String, b: Board, mH: Gameplay): Move = {
     import Board._
     val possibleMoves = b.moves(current, mH)
-    val depth: Int = 0
+    val currentDepth: Int = 0
     val scores: Scores = evaluate(b, possibleMoves, mH)
-    val newScores: Scores = if (inScope(depth+1) && !mate(b, current, mH)) {
+    val newScores: Scores = if (inScope(currentDepth + 1) && !mate(b, current, mH)) {
       val searchScores: Scores = (for ((m, s) <- scores;
            vision: (Board, Moves.Gameplay) = future(b, m, mH);
-           searchScore: Score = search(b.opponent(current), vision._1, mH, depth+1, m, s)
+           searchScore: Score = search(b.opponent(current), vision._1, vision._2, currentDepth + 1, m, s)
       ) yield scala.collection.mutable.Map(searchScore._1 -> searchScore._2)).head
       searchScores
     } else {
@@ -78,18 +78,19 @@ class Engine { // eventually will pass constants in as parameters
     import scala.collection.immutable.ListMap
     val moves = b.moves(owner, mH)
     val moveScores: Scores = evaluate(b, moves, mH)
-    val newScore: Scores = if (inScope(depth+1)) {
+    val newScore: Scores = if (inScope(depth + 1)) {
       val ns: Scores = (for (m <- ListMap(moveScores.toSeq.sortWith(_._2 > _._2):_*).take(powerMap(depth)).keys
         if !mate(b, owner, mH);
         vision: (Board, Moves.Gameplay) = future(b, m, mH);
-        searchScores: Score = search(b.opponent(owner), vision._1, vision._2, depth+1, m, score)
+        searchScores: Score = search(b.opponent(owner), vision._1, vision._2, depth + 1, m, score)
       ) yield scala.collection.mutable.Map(searchScores._1 -> searchScores._2)).head
       ns
     } else { // maximum search depth reached
       moveScores
     }
     val orderedScores = ListMap(newScore.toSeq.sortWith(_._2 > _._2):_*)
-    val updatedScore = immediateWeight*score + (1-immediateWeight)*(orderedScores.take(powerMap(depth)).values.sum / powerMap(depth))
+    val updatedScore = immediateWeight * score +
+      (1-immediateWeight) * (orderedScores.take(powerMap(depth)).values.sum / powerMap(depth))
     (move, updatedScore)
   }
 
@@ -145,7 +146,7 @@ class Engine { // eventually will pass constants in as parameters
     val scores = if (owner == "White") {
       for (row <- advancement) yield row*row
     } else {
-      for (row <- advancement) yield (SIDE-row)*(SIDE-row)
+      for (row <- advancement) yield (SIDE-row) * (SIDE-row)
     }
     scores.sum
   }
@@ -181,7 +182,7 @@ object Engine {
   def apply: Engine = new Engine
 
   val immediateWeight: Double = 0.2
-  val maxSearchDepth: Int = 3
+  val maxSearchDepth: Int = 2
   val powerMap = Map(1 -> 5, 2 -> 5, 3 -> 5, 4 -> 2, 5 -> 2)
 
   object PieceValue {

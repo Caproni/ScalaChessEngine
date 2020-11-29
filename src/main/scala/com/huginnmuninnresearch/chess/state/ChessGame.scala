@@ -48,6 +48,8 @@ class ChessGame(white: Player, black: Player, move: String = WHITE, var result: 
   move(parse(board, BLACK, "a8->d8", moveHistory.m.moves).get)
   move(parse(board, WHITE, "e3->d4", moveHistory.m.moves).get)
   move(parse(board, BLACK, "d7->c8", moveHistory.m.moves).get)
+  move(parse(board, WHITE, "e1->d1", moveHistory.m.moves).get)
+  move(parse(board, BLACK, "d8->d4", moveHistory.m.moves).get)
 
 
   while(result.isEmpty) { // determine whether game complete
@@ -108,7 +110,10 @@ object ChessGame {
 
   def main(args: Array[String]): Unit = {
     val computer: Boolean = true
-    val g: ChessGame = new ChessGame(white = Player("Edmund", computer), black = Player("Alexander Ward", computer))
+    val g: ChessGame = new ChessGame(
+      white = Player("Edmund", computer),
+      black = Player("Alexander Ward", computer)
+    )
   }
 
   def engines(white: Player, black: Player): Engines = Map(white -> new Engine, black -> new Engine)

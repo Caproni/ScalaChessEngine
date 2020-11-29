@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="43a55400-c153-4188-a608-d3504b575082" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/.name" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/codeStyles/Project.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/codeStyles/codeStyleConfig.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/modules/ChessEngine-build.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/modules/ChessEngine.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/sbt__com_typesafe_scala_logging_scala_logging_2_12_3_5_0_jar.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/sbt__com_typesafe_scala_logging_scala_logging_2_12_3_9_2_jar.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/sbt__org_scala_lang_scala_library_2_12_4_jar.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/sbt__org_scala_lang_scala_library_2_12_4_jar.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules/statistics-build.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules/statistics.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/sbt.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/sbt.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/scala_compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/scala_compiler.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.sbt" beforeDir="false" afterPath="$PROJECT_DIR$/build.sbt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/project/build.properties" beforeDir="false" afterPath="$PROJECT_DIR$/project/build.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/scala/com/huginnmuninnresearch/chess/engine/Engine.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/com/huginnmuninnresearch/chess/engine/Engine.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/scala/com/huginnmuninnresearch/chess/grading/GradingSystem.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/com/huginnmuninnresearch/chess/grading/GradingSystem.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/scala/com/huginnmuninnresearch/chess/grading/Player.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/com/huginnmuninnresearch/chess/grading/Player.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/scala/com/huginnmuninnresearch/chess/pieces/Piece.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/com/huginnmuninnresearch/chess/pieces/Piece.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/scala/com/huginnmuninnresearch/chess/state/ChessGame.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/com/huginnmuninnresearch/chess/state/ChessGame.scala" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="CodeStyleSettingsInfer">
+    <option name="done" value="true" />
+  </component>
+  <component name="ExternalProjectsData">
+    <projectState path="$PROJECT_DIR$">
+      <ProjectState />
+    </projectState>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="JupyterTrust" id="77b39152-1666-4727-85a0-a7157e55a5fa" />
+  <component name="ProjectCodeStyleSettingsMigration">
+    <option name="version" value="1" />
+  </component>
+  <component name="ProjectId" id="1ky52RZBsnRLrD88yEUYZbmpf1b" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="aspect.path.notification.shown" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="project.structure.last.edited" value="SDKs" />
+    <property name="project.structure.proportion" value="0.0" />
+    <property name="project.structure.side.proportion" value="0.0" />
+    <property name="restartRequiresConfirmation" value="false" />
+    <property name="scala_project_settings_configurable.last_selected_tab_index" value="0" />
+    <property name="settings.editor.selected.configurable" value="build.tools" />
+  </component>
+  <component name="RunManager">
+    <configuration name="ChessGame" type="Application" factoryName="Application" temporary="true">
+      <option name="MAIN_CLASS_NAME" value="com.huginnmuninnresearch.chess.state.ChessGame" />
+      <module name="ChessEngine" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.huginnmuninnresearch.chess.state.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="ArquillianJUnit" factoryName="" nameIsGenerated="true">
+      <option name="arquillianRunConfiguration">
+        <value>
+          <option name="containerStateName" value="" />
+        </value>
+      </option>
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Application.ChessGame" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="43a55400-c153-4188-a608-d3504b575082" name="Default Changelist" comment="" />
+      <created>1606659785672</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1606659785672</updated>
+      <workItem from="1606659787157" duration="30029000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="223" y="67" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1606660738625">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state x="223" y="67" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1536.824@0.0.1536.824" timestamp="1606660738625" />
+    <state x="531" y="327" key="#com.intellij.framework.addSupport.AddSupportForSingleFrameworkDialog" timestamp="1606660042015">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state x="531" y="327" key="#com.intellij.framework.addSupport.AddSupportForSingleFrameworkDialog/0.0.1536.824@0.0.1536.824" timestamp="1606660042015" />
+    <state x="506" y="186" width="731" height="593" key="#xdebugger.evaluate" timestamp="1606691930478">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state x="506" y="186" width="731" height="593" key="#xdebugger.evaluate/0.0.1536.824@0.0.1536.824" timestamp="1606691930478" />
+    <state width="398" height="466" key="DebuggerActiveHint" timestamp="1606680573860">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state width="398" height="466" key="DebuggerActiveHint/0.0.1536.824@0.0.1536.824" timestamp="1606680573860" />
+    <state width="1493" height="303" key="GridCell.Tab.0.bottom" timestamp="1606692957765">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state width="1493" height="303" key="GridCell.Tab.0.bottom/0.0.1536.824@0.0.1536.824" timestamp="1606692957765" />
+    <state width="1493" height="303" key="GridCell.Tab.0.center" timestamp="1606692957764">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state width="1493" height="303" key="GridCell.Tab.0.center/0.0.1536.824@0.0.1536.824" timestamp="1606692957764" />
+    <state width="1493" height="303" key="GridCell.Tab.0.left" timestamp="1606692957764">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state width="1493" height="303" key="GridCell.Tab.0.left/0.0.1536.824@0.0.1536.824" timestamp="1606692957764" />
+    <state width="1493" height="303" key="GridCell.Tab.0.right" timestamp="1606692957764">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state width="1493" height="303" key="GridCell.Tab.0.right/0.0.1536.824@0.0.1536.824" timestamp="1606692957764" />
+    <state width="1493" height="303" key="GridCell.Tab.1.bottom" timestamp="1606692900088">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state width="1493" height="303" key="GridCell.Tab.1.bottom/0.0.1536.824@0.0.1536.824" timestamp="1606692900088" />
+    <state width="1493" height="303" key="GridCell.Tab.1.center" timestamp="1606692900088">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state width="1493" height="303" key="GridCell.Tab.1.center/0.0.1536.824@0.0.1536.824" timestamp="1606692900088" />
+    <state width="1493" height="303" key="GridCell.Tab.1.left" timestamp="1606692900087">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state width="1493" height="303" key="GridCell.Tab.1.left/0.0.1536.824@0.0.1536.824" timestamp="1606692900087" />
+    <state width="1493" height="303" key="GridCell.Tab.1.right" timestamp="1606692900088">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state width="1493" height="303" key="GridCell.Tab.1.right/0.0.1536.824@0.0.1536.824" timestamp="1606692900088" />
+    <state x="277" y="0" key="SettingsEditor" timestamp="1606673168147">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state x="277" y="0" key="SettingsEditor/0.0.1536.824@0.0.1536.824" timestamp="1606673168147" />
+    <state width="775" height="419" key="XDebugger.FullValuePopup" timestamp="1606692913525">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state width="775" height="419" key="XDebugger.FullValuePopup/0.0.1536.824@0.0.1536.824" timestamp="1606692913525" />
+    <state x="320" y="148" width="895" height="628" key="com.intellij.xdebugger.impl.breakpoints.ui.BreakpointsDialogFactory$2" timestamp="1606675498199">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state x="320" y="148" width="895" height="628" key="com.intellij.xdebugger.impl.breakpoints.ui.BreakpointsDialogFactory$2/0.0.1536.824@0.0.1536.824" timestamp="1606675498199" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <breakpoint enabled="true" type="java-exception">
+          <properties class="java.lang.AssertionError" package="java.lang" />
+          <option name="timeStamp" value="1" />
+        </breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>
