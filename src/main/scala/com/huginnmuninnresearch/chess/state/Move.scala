@@ -1,13 +1,13 @@
 package com.huginnmuninnresearch.chess.state
 
+import com.huginnmuninnresearch.chess.notation.AlgebraicNotation._
 import com.huginnmuninnresearch.chess.pieces.Piece
 import com.huginnmuninnresearch.chess.pieces.Piece.Index
-import com.huginnmuninnresearch.chess.notation.AlgebraicNotation._
-import com.huginnmuninnresearch.chess.state.Moves.Gameplay
+import com.huginnmuninnresearch.chess.record.MoveHistory
 
 case class Move(piece: Piece, to: Index, taken: Option[Piece], result: String = "") {
 
-  def valid(implicit b: Board, mH: Gameplay): Boolean = {
+  def valid(implicit b: Board, mH: MoveHistory): Boolean = {
     piece.legal(b, mH).contains(to)
   }
 

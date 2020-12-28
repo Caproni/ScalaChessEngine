@@ -2,10 +2,13 @@ package com.huginnmuninnresearch.chess.state
 
 import com.huginnmuninnresearch.chess.notation.AlgebraicNotation.iToA
 import com.huginnmuninnresearch.chess.pieces.Piece
-import com.huginnmuninnresearch.chess.pieces.Piece.{Index, Indices}
+import com.huginnmuninnresearch.chess.pieces.Piece.Index
+import com.huginnmuninnresearch.chess.record.MoveHistory
 import com.huginnmuninnresearch.chess.state.Board._
 import com.huginnmuninnresearch.chess.state.Moves.Gameplay
 import com.typesafe.scalalogging.LazyLogging
+
+import scala.collection.mutable.ListBuffer
 
 class Square(val loc: Index, private var _piece: Option[Piece]) extends LazyLogging {
 
@@ -14,8 +17,8 @@ class Square(val loc: Index, private var _piece: Option[Piece]) extends LazyLogg
 
   val location: String = iToA(loc)
 
-  def legal(b: Board, mH: Gameplay): Indices = {
-    if (_piece == None) Array() else _piece.get.legal(b, mH)
+  def legal(b: Board, mH: MoveHistory): Gameplay = {
+    if (_piece.isEmpty) ListBuffer[Move]() else _piece.get.legal(b, mH)
   }
 
   private def colour: String = {

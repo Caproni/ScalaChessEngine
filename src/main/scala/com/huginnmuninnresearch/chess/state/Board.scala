@@ -1,12 +1,14 @@
 package com.huginnmuninnresearch.chess.state
 
-import scala.languageFeature.implicitConversions
 import com.huginnmuninnresearch.chess.grading.Player
+import com.huginnmuninnresearch.chess.notation.AlgebraicNotation.aToI
 import com.huginnmuninnresearch.chess.pieces.Piece.{Index, Indices}
 import com.huginnmuninnresearch.chess.pieces._
-import Moves._
+import com.huginnmuninnresearch.chess.record.MoveHistory
+import com.huginnmuninnresearch.chess.state.Moves._
 
 import scala.collection.mutable.ListBuffer
+import scala.languageFeature.implicitConversions
 
 class Board(val white: Player, val black: Player) {
   import Board._
@@ -25,50 +27,50 @@ class Board(val white: Player, val black: Player) {
     squares
   }
 
-  def numberAttacking(owner: String, index : Index): Int = {
-    val number = for {
+  private def totalAttacking(owner: String, index: Index, mH: MoveHistory) = {
+    for {
       piece <- pieces(owner).filterNot(_.id == "King")
-      if piece.accessible(this).contains(index)
+      if piece.accessible(this, mH).contains(index)
     } yield piece
+  }
+
+  def numberAttacking(owner: String, index : Index, mH: MoveHistory): Int = {
+    val number = totalAttacking(owner, index, mH)
     number.length + king(owner).immediateCoverage(this).contains(index)
   }
 
-  def piecesAttacking(owner: String, index : Index): Pieces = {
-    val attackers = for {
-      piece <- pieces(owner).filterNot(_.id == "King")
-      if piece.accessible(this).contains(index)
-    } yield piece
+  def piecesAttacking(owner: String, index : Index, mH: MoveHistory): Pieces = {
+    val attackers = totalAttacking(owner, index, mH)
     if (king(owner).immediateCoverage(this).contains(index)) attackers :+ king(owner) else attackers
   }
 
-  def moves(owner: String, mH: Gameplay): Gameplay = {
-    import com.huginnmuninnresearch.chess.notation.AlgebraicNotation._
-    (for {
+  def moves(owner: String, mH: MoveHistory): Gameplay = {
+    ListBuffer((for {
       piece <- pieces(owner)
-      index <- piece.legal(this, mH)
-      checkStatus: String = if (king(opponent(owner)).check(this)) CHECK else NORMAL
-      promotionOption = if (canPromote(piece)) Array("B", "N", "Q", "K") else Array("")
-      option <- promotionOption
-    } yield Move(piece, index, squares(idxToE(index)).piece, option + checkStatus)).to[ListBuffer]
+      move <- piece.legal(this, mH)
+    } yield move): _ *)
   }
 
-  def stalemate(owner: String, mH: Gameplay): Boolean = {
+  def stalemate(owner: String, mH: MoveHistory): Boolean = {
     if (moves(owner, mH).isEmpty) true else false
   }
 
-  def castle(owner: String, side: String, mH: Gameplay = ListBuffer()): Unit = {
-    import com.huginnmuninnresearch.chess.notation.AlgebraicNotation._ // for convenience
+  private def doCastle(row: String, piece: (String, String)): Unit = {
+    squares(idxToE(aToI(piece._2 + row))).enter(squares(idxToE(aToI(piece._1 + row))).pop.get)
+  }
+
+  def castle(owner: String, side: String, mH: MoveHistory): Unit = {
     import Piece._
-    if (king(owner).castle(this, side)) {
+    if (king(owner).castle(this, side, mH)) {
       val row: String = if (owner == WHITE) "1" else "8"
       val king: (String, String) = if (side == KS) ("e", "g") else ("e", "b")
       val rook: (String, String) = if (side == KS) ("h", "f") else ("a", "c")
-      squares(idxToE(aToI(king._2+row))).enter(squares(idxToE(aToI(king._1+row))).pop.get)
-      squares(idxToE(aToI(rook._2+row))).enter(squares(idxToE(aToI(rook._1+row))).pop.get)
+      doCastle(row, king)
+      doCastle(row, rook)
     }
   }
 
-  def check(owner: String, mH: Gameplay): Boolean = king(owner).check(this)
+  def check(owner: String, mH: MoveHistory): Boolean = king(owner).check(this, mH)
 
   def promote(pawn: Pawn, choice: String): Unit = {
     require(Array("B", "N", "Q", "R").contains(choice.toUpperCase))
@@ -92,11 +94,11 @@ class Board(val white: Player, val black: Player) {
     king.head.asInstanceOf[King]
   }
 
-  def result(justMoved: String, mH: Gameplay): Option[String] = {
+  def result(justMoved: String, mH: MoveHistory): Option[String] = {
     if (checkmate(justMoved, mH)) Some(justMoved) else None
   }
 
-  def checkmate(owner: String, mH: Gameplay): Boolean = king(opponent(owner)).checkmate(this, mH)
+  def checkmate(owner: String, mH: MoveHistory): Boolean = king(opponent(owner)).checkmate(this, mH)
 
   def opponent(owner: String): String = {
     owner match {
@@ -105,14 +107,18 @@ class Board(val white: Player, val black: Player) {
     }
   }
 
-  def unmove(move: Move): Unit = {
+  def undoMove(move: Move): Unit = {
     squares(idxToE(move.to)).fill(move.taken) // puts any taken piece back on the board
     squares(idxToE(move.piece.loc)).fill(move.piece) // puts the moved piece back where it came from
   }
 
-  def unplay(moves: Gameplay): Unit = moves.reverse.foreach(unmove) // play through backwards
+  def undoPlay(mH: MoveHistory): Unit = mH.m.moves.reverse.foreach(undoMove) // play through backwards
 
-  def play(moves: Gameplay): Unit = moves.foreach(move)
+  def play(mH: MoveHistory): Unit = {
+    for (move <- mH.m.moves) {
+      this.move(move.piece, move.to)
+    }
+  }
 
   def pieces: Pieces = for (square <- squares.filter(_.piece.nonEmpty)) yield square.piece.get
 
@@ -138,7 +144,7 @@ class Board(val white: Player, val black: Player) {
     empty
   }
 
-  private def idxToE(index: Index): Int = SIDE*index._1 + index._2
+  private def idxToE(index: Index): Int = SIDE * index._1 + index._2
 
   private def EToIdx(e: Int): Index = (e / SIDE, e % SIDE)
 
@@ -156,24 +162,24 @@ class Board(val white: Player, val black: Player) {
     empty
   }
 
-  def verify(move: Move, mH: Gameplay): Boolean = {
+  def verify(move: Move, mH: MoveHistory): Boolean = {
     moves(move.piece.owner, mH).contains(move)
   }
 
-  def create(piece: Piece, to: Index, mH: Gameplay): Board = {
+  def create(piece: Piece, to: Index, mH: MoveHistory): Board = {
     if (piece.legal(this, mH).contains(to)) squares(idxToE(to)).enter(squares(idxToE(piece.loc)).pop.get)
     this
   }
 
-  def replicate(mH: Gameplay): Board = {
+  def replicate(mH: MoveHistory): Board = {
     val duplicate = new Board(white, black)
     duplicate.play(mH)
     duplicate
   }
   
-  private def grabRow(row: Int): Squares = (for (col <- 0 until SIDE) yield squares(idxToE((row, col)))).to[Array]
+  private def grabRow(row: Int): Squares = (for (col <- 0 until SIDE) yield squares(idxToE((row, col)))).toArray
 
-  private def grabCol(col: Int): Squares = (for (row <- 0 until SIDE) yield squares(idxToE((row, col)))).to[Array]
+  private def grabCol(col: Int): Squares = (for (row <- 0 until SIDE) yield squares(idxToE((row, col)))).toArray
 
   def forcePiecesByRow(owner: String, row: Int): Pieces = pieces(owner).filter(_.loc._1 == row)
 
@@ -183,7 +189,7 @@ class Board(val white: Player, val black: Player) {
 
   def piecesByCol(col: Int): Pieces = forcePiecesByCol(WHITE, col) ++ forcePiecesByCol(BLACK, col)
 
-  def propose(piece: Piece, to: Index, mH: Gameplay): Board = {
+  def propose(piece: Piece, to: Index, mH: MoveHistory): Board = {
     val future = replicate(mH)
     future.move(piece.copy, to)
     future
@@ -200,12 +206,12 @@ class Board(val white: Player, val black: Player) {
     move(piece, aToI(to))
   }
 
-  def move(m: Move): Unit = {
-    import com.huginnmuninnresearch.chess.pieces.Piece._
+  def move(m: Move, mH: MoveHistory): Unit = {
     import com.huginnmuninnresearch.chess.notation.AlgebraicNotation._
+    import com.huginnmuninnresearch.chess.pieces.Piece._
     if (m.castling) {
       val side = if (m.to._2 == aToC("g")) KS else QS
-      castle(m.piece.owner, side)
+      castle(m.piece.owner, side, mH)
     } else {
       squares(idxToE(m.piece.loc)).empty()
       val movedPiece = Pawn(m.piece.owner, m.to, m.piece.moved)
@@ -220,7 +226,7 @@ class Board(val white: Player, val black: Player) {
   override def toString: String = {
     val slice: String = "----------\n"
 
-    def stringifyBoard(squares: Squares): String = {
+    def stringifyBoard(): String = {
       var result = ""
       for (row <- 0 until SIDE) {
         result = stringifyRow(grabRow(row))++result
@@ -241,7 +247,7 @@ class Board(val white: Player, val black: Player) {
       }
     }
 
-    "    B\n" + slice + stringifyBoard(squares.reverse) + slice + "    W\n"
+    "    B\n" + slice + stringifyBoard() + slice + "    W\n"
   }
 }
 

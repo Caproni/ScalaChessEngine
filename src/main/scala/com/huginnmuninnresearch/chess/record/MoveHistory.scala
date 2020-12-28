@@ -7,9 +7,11 @@ import scala.annotation.tailrec
 
 class MoveHistory(val id: String, val m: Moves = Moves()) {
 
+  def copy(): MoveHistory = MoveHistory(id = this.id, m = this.m.copy())
+
   def addMove(move: Move): Unit = m.add(move)
 
-  def number: Int = 1+(m.moves.length / 2)
+  def number: Int = 1 + (m.moves.length / 2)
 
   def whiteMove: Boolean = if (m.moves.length % 2 == 0) true else false
 
@@ -23,10 +25,12 @@ class MoveHistory(val id: String, val m: Moves = Moves()) {
     1+(pawnMoves.lastIndexOf(true)/2)
   }
 
+  def last: Move = m.last
+
   override def toString: String = {
     @tailrec
     def printer(moves: Gameplay, moveCount: Int = 1, output: String = ""): String = if (moves.nonEmpty) {
-      printer(moves.tail, moveCount + 1, output + (if (moveCount % 2 == 0) "" else (1+moveCount/2).toString+") ") + moves.head.toString + (if (moveCount % 2 == 0) "\n" else ""))
+      printer(moves.tail, moveCount + 1, output + (if (moveCount % 2 == 0) "" else (1 + moveCount / 2).toString+") ") + moves.head.toString + (if (moveCount % 2 == 0) "\n" else ""))
     } else output
     s"Game: $id\n-----------------------------\n${printer(m.moves)}"
   }
@@ -35,4 +39,5 @@ class MoveHistory(val id: String, val m: Moves = Moves()) {
 
 object MoveHistory {
   def apply(id: String): MoveHistory = new MoveHistory(id)
+  def apply(id: String, m: Moves): MoveHistory = new MoveHistory(id, m)
 }
